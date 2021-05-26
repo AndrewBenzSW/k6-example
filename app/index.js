@@ -31,10 +31,12 @@ app.post("/sum", (req, res) => {
   });
 });
 
+// Get a random number between 1 and 10
 app.get("/random", (req, res) => {
   res.send(getRandomIntInclusive(1, 10).toString());
 });
 
+// Make a request that waits a random amount of time between 25ms and 250ms
 app.get("/performance", async (req, res) => {
   const delay = getRandomIntInclusive(25, 250);
   await new Promise((res) => setTimeout(res, delay));
