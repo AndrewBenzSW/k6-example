@@ -18,14 +18,31 @@ The K6 team has [a writeup](https://k6.io/blog/k6-vs-jmeter/) on the pros and co
 
 ## Why use K6?
 
+There are many reasons to use K6 over other solutions, but I'm going to focus on some of the things that we found especially helpful while building the Native Rating functionality.
+
 ### Speed
 
-### Scriptability
+K6 can run tests **very** fast. In fact, as you'll see in the examples later on, most K6 tests will use a sleep statement to slow it down a bit. I never had a problem with JMeter's performance, but it's nice to know I can write completely custom tests and not have to give a thought to how K6 will handle it. Which leads me to the second point...
 
-### Tests as source
+### Programmability
+
+Writing tests in K6 doesn't feel any different than writing any other code, which lets developers focus on the logic of the tests instead of how to work with the testing framework. This has allowed us to quickly throw together one-off tests as well as build more complex data driven tests using tools and techniques we were already familiar with. 
+
+While testing the accuracy of the Native Rating solution, we pulled shipment data from Redshift into a CSV file and used that to generate test requests against the Native Rating service. Because the CSV data was available to the test code, we were able to easily compare the actual rate returned from the carrier with the rate that the Native Rating service returned. We then evolved the script so that it could use that Redshift data as well as data we generated from ShipEngine.
 
 ### Leverage existing skills
 
+Because K6 tests are Javascript, we're able to leverage our existing development knowledge to write the tests. The actual K6 interface is relatively small, and the vast majority of test code we've written has been standard Javascript. This helps when trying to develop more involved tests because you can focus on what the test *logically* needs to do vs. what it *technically* needs to do.
+
+### Statistics
+
+When we first added K6 to our tool set, the initial draw was the automatic statistics that it generates. We have a performance goal that requires testing the P95 response time of the service. Using K6, we automatically get rich statistics for all the requests made, including a breakdown of the request into components such as connection, waiting, sending, and receiving time. These statistics include average, min, max, and P95 times among others.
+
+With just a bit of extra work, you can create these same sorts of statistics for any piece of data beyond what's built in. But the nice thing is you don't _have_ to!
+
+### Tests as source
+
+To me, this is a no-brainer: source code all the things! When I pull latest and tests start breaking, I want to be able to easily diff the code *and* the tests. Some tools store their test definitions in XML, which is *technically* diffable, but it's not always easy. It can also make merges tougher, especially when the tool decides to change the order of elements when you save.
 
 ## See it in action!
 
