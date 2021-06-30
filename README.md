@@ -44,6 +44,14 @@ With just a bit of extra work, you can create these same sorts of statistics for
 
 To me, this is a no-brainer: source code all the things! When I pull latest and tests start breaking, I want to be able to easily diff the code *and* the tests. Some tools store their test definitions in XML, which is *technically* diffable, but it's not always easy. It can also make merges tougher, especially when the tool decides to change the order of elements when you save.
 
+## Gotchas
+
+Unfortunately, K6 is not perfect and does have a few gotchas. The primary issue I run into is that while K6 tests are written in Javascript, they are run through a custom Javascript runtime. Most of the time, this is totally transparent. Unfortunately, when I'm debugging a test and want to throw in a quick `console.dir(someObj)` line, I get a nasty reminder that this isn't a perfect environment because the `dir` function doesn't exist.
+
+Related to this is the NPM package limitation. Unfortunately, K6 tests cannot use NPM packages. While this seems like a huge limitation, it actually hasn't been too bad. The K6 documentation has links to bundled versions of a few commonly used packages and they have documentation on how you can bundle most existing packages for use in K6 tests. The only real limitation is that the package cannot make use of built-in Node or browser functionality.
+
+Finally, some of the errors can be misleading. I was running a test suite recently and got strange errors that made me think something in the test was broken. It turns out that the test was having problems connecting to the service and the error that was surfaced was a native Go error. You rarely have to care what language K6 was built with, but this is one time when it helps to keep that in mind.
+
 ## See it in action!
 
 I've built an extremely simple API that we're going to use to learn the basics of what K6 can offer. I've created a tag in Github for each step so you can either start at the beginning and write the test code yourself, or you can read what needs to be done and check out the tag for the next step so that you can just run the tests without writing the code.
@@ -72,11 +80,11 @@ npm start
 
 Once this starts, you should be able to ignore the terminal until you're ready to stop the application.
 
-### Hello World!
+### 1. Hello World!
 
 We'll start with the simplest possible test: make a GET request to our service and use the default timings. Create a directory called `tests` in the root of the repository and we'll create the following file.
 
-##### **`tests/getHelloWorld.js`**
+##### **`tests/1_getHelloWorld.js`**
 ```js 
 import http from "k6/http";
 import { sleep } from "k6";
@@ -95,3 +103,89 @@ Let's run the test and see what happens:
 ```bash
 k6 run tests/getHelloWorld.js
 ```
+
+The test should take a few seconds to run and you should be presented with a screen that looks similar to the screenshot below. You can see the various components of the request and the statistics associated with it. It's not very interesting yet because we've only made one request. We'll do more requests in the next example.
+
+TODO: ADD SCREENSHOT
+
+### 2. Validate Results
+
+Next, we're going to write an end-to-end integration test using K6. This test is just going to add a set of numbers, but since it's making a request and examining the response, what is happening behind the scenes can be as simple or complex as necessary. For this test, create the following file in the `tests` directory
+
+##### **`tests/2_getAdd_1.js`**
+```js 
+import http from "k6/http";
+import { check, sleep } from "k6";
+
+export default function () {
+  const res = http.get("http://localhost:3000/add/1/1");
+
+  check(res, {
+    "returns 2": (r) => r.body === "2",
+  });
+
+  sleep(1);
+}
+```
+
+What's new here is that we're capturing the response and performing a check, which is a K6 function. In this case, we're passing in the result and comparing the body to the expected value. You could perform any number of tests on the result object, though, including testing for a 200 status code or the presence of a header value. Go ahead and run the test:
+
+```bash
+k6 run tests/2_getAdd_1.js
+```
+
+TODO: Add screenshot
+
+Success! We've just verified that 1 + 1 = 2. That's not a very thorough test, though, so let's add a few more requests:
+
+##### **`tests/2_getAdd_2.js`**
+```js 
+import http from "k6/http";
+import { check, sleep } from "k6";
+
+// Set up our test data
+const tests = [
+  { addends: [1, 1], sum: "2" },
+  { addends: [4, 8], sum: "12" },
+  { addends: [-1, -1], sum: "-2" },
+  { addends: [1000, 1], sum: "1001" },
+];
+
+export default function () {
+  // Go through each test one by one
+  for (const test of tests) {
+    const res = http.get(
+      `http://localhost:3000/add/${test.addends[0]}/${test.addends[1]}`
+    );
+
+    check(res, {
+      "returns correct sum": (r) => r.body === test.sum,
+    });
+
+    sleep(0.2);
+  }
+}
+```
+
+As you can see, we didn't use anything new from K6 to test more data points: we just created an array of objects and looped through them!
+
+### 3. Test a POST
+
+TODO: Build example that makes a post request
+
+### 4. Custom Statistics
+
+TODO: Build example that uses custom statistics
+
+### 5. FAILURE!
+
+TODO: Build example that sets thresholds that aren't met
+
+### 6. Bundling and Typescript
+
+TODO: Build example that uses typescript and an NPM module
+
+## Conclusion
+
+I hope this has been a helpful overview of what K6 is and what it can offer. I wish I'd known about it when working on ShipWorks Hub because we used JMeter quite a bit for integration testing and I think K6 would have made this so much easier. If you'd like any more info or would like to see specifics of how we use K6 in our current projects, feel free to drop me a line.
+
