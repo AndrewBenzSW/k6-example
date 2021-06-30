@@ -12,12 +12,19 @@ When I was on the ShipWorks Hub team, we used JMeter to perform some end to end 
 
 Next, while it has a CLI test runner, the primary means of interaction with the tool is through the GUI. This is fine when you're exploring, but for performing repeatable, reusable tasks, it's less than ideal. Everyone is different, but I personally feel faster on the keyboard than on the mouse. Some things, like copying and pasting, can only be done in the way the GUI developers allow which can also get in the way.
 
-Finally, JMeter is built on Java. This isn't objectively bad; but my team -- and I would suspect much of our organization -- has very little experience in Java. Having to deal with VM configuration is not something I want to have to deal with.
+Finally, JMeter is built on Java. This isn't objectively bad; but my team -- and I would suspect much of our organization -- has very little experience in Java. Dealing with VM configuration is not something I want to have to worry about when running tests.
 
 The K6 team has [a writeup](https://k6.io/blog/k6-vs-jmeter/) on the pros and cons of each, and it's a good read if you want to know more. There are many other tools in this space and if you'd like more information on some of the competition, the K6 team has done [an analysis](https://k6.io/blog/comparing-best-open-source-load-testing-tools/) of each with some pros and cons. It's obviously biased, but the information is good.
 
 ## Why use K6?
 
+### Speed
+
+### Scriptability
+
+### Tests as source
+
+### Leverage existing skills
 
 
 ## See it in action!
@@ -64,7 +71,7 @@ export default function () {
 }
 ```
 
-This is what a basic K6 test looks like. Like any Javascript file, we start with the modules we want to use within the script. The we define the default export for our test module, which K6 uses as the main code block that each virtual user (VU) will execute for each iteration of the test. Within the default function, the first line makes a get request to the root of our API. The second line causes the script to sleep for 1 second before finishing. It isn't strictly necessary to execute the sleep command, but there is [an explanation](https://community.k6.io/t/how-sleep-impacts-overall-duration-of-the-test/404) on the K6 support forum explaining why you might want to do it.
+This is what a basic K6 test looks like. As with any Javascript file, we start with the modules we want to use within the script. Then we define the default export for our test module, which K6 uses as the main code block that each virtual user (VU) will execute for each iteration of the test. Within the default function, the first line makes a get request to the root of our API. The second line causes the script to sleep for 1 second before finishing. It isn't strictly necessary to execute the sleep command, but there is [an explanation](https://community.k6.io/t/how-sleep-impacts-overall-duration-of-the-test/404) on the K6 support forum explaining why you might want to do it.
 
 Let's run the test and see what happens:
 
